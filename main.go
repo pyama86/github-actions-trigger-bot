@@ -18,15 +18,11 @@ import (
 	"github.com/slack-go/slack/slackevents"
 )
 
-func Env_load() {
+func main() {
 	err := godotenv.Load()
 	if err != nil {
-		logrus.Fatal("Error loading .env file")
+		logrus.Warn("Error loading .env file")
 	}
-}
-
-func main() {
-	Env_load()
 	reporeg := regexp.MustCompile(`\w+\/\w+`)
 
 	http.HandleFunc("/slack/events", func(w http.ResponseWriter, r *http.Request) {
