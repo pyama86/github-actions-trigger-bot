@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/version: "0.1"
+        app.kubernetes.io/component: kvs
+        app.kubernetes.io/part-of: issuer-bot
+    spec:
+      containers:
+      - name: redis
+        image: redis
+        tty: true
+        ports:
+        - containerPort: 6379
