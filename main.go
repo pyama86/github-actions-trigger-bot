@@ -11,7 +11,6 @@ import (
 
 	"github.com/joho/godotenv"
 	goworkers "github.com/jrallison/go-workers"
-	"github.com/k0kubun/pp"
 	"github.com/pyama86/github-actions-trigger-bot/internal/workers"
 	"github.com/sirupsen/logrus"
 	"github.com/slack-go/slack"
@@ -77,8 +76,6 @@ func main() {
 				message := strings.Split(event.Text, " ")
 				command := message[1]
 
-				pp.Println(message)
-				logrus.Info(command)
 				switch {
 				case command == "ping":
 					api := slack.New(os.Getenv("SLACK_BOT_TOKEN"))
