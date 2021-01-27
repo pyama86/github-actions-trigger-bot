@@ -16,7 +16,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var triggerActionsExp = regexp.MustCompile(`(?P<org>[^\/]+)\/(?P<repo>[\w\-\_]+)[^\w]+(?P<task>[\w\-\_]+)[^\w]+branch:(?P<branch>[\w\-\_]+)`)
+var triggerActionsExp = regexp.MustCompile(`(?P<org>[^\/]+)\/(?P<repo>[\w\-\_\.]+)[^\w]+(?P<task>[\w\-\_]+)[^\w]+branch:(?P<branch>[\w\-\_]+)`)
 
 type TriggerActionsParams struct {
 	Event *slackevents.AppMentionEvent
