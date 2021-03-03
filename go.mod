@@ -14,5 +14,6 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/slack-go/slack v0.8.0
+	github.com/thoas/go-funk v0.7.0
 	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3
 )

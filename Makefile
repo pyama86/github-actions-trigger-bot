@@ -7,3 +7,6 @@ build:
 image: build
 	docker build -t pyama/github-actions-trigger .
 	docker push pyama/github-actions-trigger
+
+test:
+	go test github.com/pyama86/github-actions-trigger-bot/...
