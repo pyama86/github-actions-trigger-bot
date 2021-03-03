@@ -6,7 +6,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: "contains(github.ref, 'default')"
+    if: "contains(github.ref, 'master')"
     steps:
     - uses: actions/checkout@v2
     - run: make build_image
