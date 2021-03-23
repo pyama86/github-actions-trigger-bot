@@ -19,7 +19,7 @@ import (
 
 var commonRegexp = `\w\-\_\.`
 var triggerActionsExp = regexp.MustCompile(`(?P<org>[^\/]+)\/(?P<repo>[` +
-	commonRegexp + `]+)[^\w]+(?P<task>[` + commonRegexp + `]+)[^\w]+` +
+	commonRegexp + `]+)[^\w]+(?P<task>[` + commonRegexp + `]+)[^\w]*` +
 	`(?P<params>([^:\s]+:[^:\s]+) |([^:\s]+:[^:\s]+))*$`)
 var requireParams = []string{"repo", "org", "task"}
 
