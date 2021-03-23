@@ -94,18 +94,21 @@ func TriggerActions(message *workers.Msg) {
 		client = c
 	}
 
-	pst := struct {
-		Ref string `json:"ref"`
-	}{
-		Ref: result["branch"],
+	if result["branch"] != "" {
+		result["ref"] = result["branch"]
+
 	}
 
-	bytes, _ := json.Marshal(pst)
+	bytes, err := json.Marshal(result)
+	if err != nil {
+		panicWithLog(err)
+	}
+
 	payload := json.RawMessage(bytes)
 	input := github.DispatchRequestOptions{EventType: result["task"], ClientPayload: &payload}
 
 	logrus.Infof("github actions payload %s", string(payload))
-	_, _, err := client.Repositories.Dispatch(ctx, result["org"], result["repo"], input)
+	_, _, err = client.Repositories.Dispatch(ctx, result["org"], result["repo"], input)
 	if err != nil {
 		panicWithLog(err)
 	}
