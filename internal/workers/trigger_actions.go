@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/go-github/v33/github"
 	"github.com/jrallison/go-workers"
 	"github.com/sirupsen/logrus"
@@ -32,7 +33,7 @@ type TriggerActionsParams struct {
 
 type config struct {
 	UnlockTaskName     string `env:"ACTIONS_UNLOCK_TASKNAME" envDefault:"unlock"`
-	LockKeyParamsKey   string `env:"ACTIONS_LOCK_KEY" envDefault:"branch"`
+	LockKeyParamsKey   string `env:"ACTIONS_LOCK_KEY" envDefault:"stage"`
 	LockValueParamsKey string `env:"ACTIONS_LOCK_VALUE" envDefault:"user"`
 	LockTTLParamsKey   string `env:"ACTIONS_LOCK_TTL" envDefault:"ttl"`
 }
@@ -107,7 +108,8 @@ func TriggerActions(message *workers.Msg) {
 	}
 
 	ctx := context.Background()
-	if result[cfg.LockKeyParamsKey] != "" && result[cfg.LockValueParamsKey] != "" && result[cfg.LockTTLParamsKey] != "" {
+
+	if result[cfg.LockKeyParamsKey] != "" && result[cfg.LockValueParamsKey] != "" {
 		key := strings.Join([]string{
 			result["org"],
 			result["repo"],
@@ -117,8 +119,17 @@ func TriggerActions(message *workers.Msg) {
 		if result["task"] == cfg.UnlockTaskName {
 			val, err := redisClient.Get(ctx, key).Result()
 			if err != nil {
+				if err == redis.Nil {
+					if _, _, err := api.PostMessage(
+						param.Event.Channel,
+						slack.MsgOptionText(fmt.Sprintf("%s/%s hasn't any lock %s", result["org"], result["repo"], result[cfg.LockKeyParamsKey]), false)); err != nil {
+						panicWithLog(err)
+					}
+					return
+				}
 				panicWithLog(err)
 			}
+
 			if val == result[cfg.LockValueParamsKey] {
 				_, err := redisClient.Del(ctx, key).Result()
 				if err != nil {
@@ -129,32 +140,41 @@ func TriggerActions(message *workers.Msg) {
 					slack.MsgOptionText(fmt.Sprintf("%s/%s release lock from %s", result["org"], result["repo"], val), false)); err != nil {
 					panicWithLog(err)
 				}
-				return
+			} else {
+				if _, _, err := api.PostMessage(
+					param.Event.Channel,
+					slack.MsgOptionText(fmt.Sprintf("%s/%s don't release lock, because lock owner is  %s", result["org"], result["repo"], val), false)); err != nil {
+					panicWithLog(err)
+				}
+
 			}
+			return
 		}
 
-		getLock, err := canLock(ctx, key, result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
-		if err != nil {
-			panicWithLog(err)
-		}
-		logrus.Infof("get lock %s from %s", result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
-
-		if !getLock {
-			val, err := redisClient.Get(ctx, key).Result()
+		if result[cfg.LockTTLParamsKey] != "" {
+			getLock, err := canLock(ctx, key, result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
 			if err != nil {
 				panicWithLog(err)
 			}
+			logrus.Infof("get lock %s from %s", result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
 
-			if val != result[cfg.LockValueParamsKey] {
-				warn := " ************ WARNING ************"
-				if _, _, err := api.PostMessage(
-					param.Event.Channel,
-					slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], val, warn), false)); err != nil {
+			if !getLock {
+				val, err := redisClient.Get(ctx, key).Result()
+				if err != nil {
 					panicWithLog(err)
 				}
-				return
-			}
 
+				if val != result[cfg.LockValueParamsKey] {
+					warn := " ************ WARNING ************"
+					if _, _, err := api.PostMessage(
+						param.Event.Channel,
+						slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], val, warn), false)); err != nil {
+						panicWithLog(err)
+					}
+					return
+				}
+
+			}
 		}
 	}
 
