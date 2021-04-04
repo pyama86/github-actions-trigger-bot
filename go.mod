@@ -4,8 +4,10 @@ go 1.14
 
 require (
 	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/caarlos0/env/v6 v6.5.0
 	github.com/customerio/gospec v0.0.0-20130710230057-a5cc0e48aa39 // indirect
 	github.com/garyburd/redigo v1.6.2 // indirect
+	github.com/go-redis/redis/v8 v8.8.0
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/joho/godotenv v1.3.0
