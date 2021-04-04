@@ -7,7 +7,9 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/caarlos0/env/v6"
 	"github.com/google/go-github/v33/github"
 	"github.com/jrallison/go-workers"
 	"github.com/sirupsen/logrus"
@@ -18,38 +20,59 @@ import (
 )
 
 var commonRegexp = `\w\-\_\.`
-var triggerActionsExp = regexp.MustCompile(`(?P<org>[^\/]+)\/(?P<repo>[` +
-	commonRegexp + `]+)[^\w]+(?P<task>[` + commonRegexp + `]+)[^\w]*` +
-	`(?P<params>([^:\s]+:[^:\s]+) |([^:\s]+:[^:\s]+))*$`)
+var triggerActionsBaseExp = regexp.MustCompile(`(?P<org>[^\/]+)\/(?P<repo>[` +
+	commonRegexp + `]+)[^\w]+(?P<task>[` + commonRegexp + `]+)`)
+var triggerActionsParamsExp = regexp.MustCompile(`([[:alnum:]]+:[[:alnum:]]+)`)
+
 var requireParams = []string{"repo", "org", "task"}
 
 type TriggerActionsParams struct {
 	Event *slackevents.AppMentionEvent
 }
 
+type config struct {
+	UnlockTaskName     string `env:"ACTIONS_UNLOCK_TASKNAME" envDefault:"unlock"`
+	LockKeyParamsKey   string `env:"ACTIONS_LOCK_KEY" envDefault:"branch"`
+	LockValueParamsKey string `env:"ACTIONS_LOCK_VALUE" envDefault:"user"`
+	LockTTLParamsKey   string `env:"ACTIONS_LOCK_TTL" envDefault:"ttl"`
+}
+
 func parseTriggerMessage(text string) map[string]string {
-	match := triggerActionsExp.FindAllStringSubmatch(text, -1)
+	match := triggerActionsBaseExp.FindAllStringSubmatch(text, -1)
 	result := make(map[string]string)
 	if len(match) == 0 {
 		return nil
 	}
-	for i, name := range triggerActionsExp.SubexpNames() {
+
+	for i, name := range triggerActionsBaseExp.SubexpNames() {
 		if i != 0 && name != "" && funk.ContainsString(requireParams, name) {
 			result[name] = match[0][i]
 		}
 	}
 
-	for _, v := range match[0][1:] {
-		if strings.Index(v, ":") > 0 {
-			kv := strings.Split(v, ":")
+	match = triggerActionsParamsExp.FindAllStringSubmatch(text, -1)
+	if len(match) == 0 {
+		return result
+	}
+	for _, v := range match {
+		if strings.Index(v[0], ":") > 0 {
+			kv := strings.Split(v[0], ":")
 			result[kv[0]] = kv[1]
 		}
 	}
+
 	return result
 }
 
-func TriggerActions(message *workers.Msg) {
+func canLock(ctx context.Context, key, value, ttl string) (bool, error) {
 
+	t, err := time.ParseDuration(ttl)
+	if err != nil {
+		return false, err
+	}
+	return redisClient.SetNX(ctx, key, value, t).Result()
+}
+func TriggerActions(message *workers.Msg) {
 	param := new(TriggerActionsParams)
 	if err := parseMessage(param, message); err != nil {
 		panicWithLog(err)
@@ -78,12 +101,65 @@ func TriggerActions(message *workers.Msg) {
 
 		}
 	}
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		panicWithLog(err)
+	}
+
 	ctx := context.Background()
+	if result[cfg.LockKeyParamsKey] != "" && result[cfg.LockValueParamsKey] != "" && result[cfg.LockTTLParamsKey] != "" {
+		key := strings.Join([]string{
+			result["org"],
+			result["repo"],
+			result[cfg.LockKeyParamsKey],
+		}, "-")
+
+		if result["task"] == cfg.UnlockTaskName {
+			val, err := redisClient.Get(ctx, key).Result()
+			if err != nil {
+				panicWithLog(err)
+			}
+			if val == result[cfg.LockValueParamsKey] {
+				_, err := redisClient.Del(ctx, key).Result()
+				if err != nil {
+					panicWithLog(err)
+				}
+				if _, _, err := api.PostMessage(
+					param.Event.Channel,
+					slack.MsgOptionText(fmt.Sprintf("%s/%s release lock from %s", result["org"], result["repo"], val), false)); err != nil {
+					panicWithLog(err)
+				}
+				return
+			}
+		}
+
+		getLock, err := canLock(ctx, key, result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
+		if err != nil {
+			panicWithLog(err)
+		}
+		logrus.Infof("get lock %s from %s", result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
+
+		if !getLock {
+			val, err := redisClient.Get(ctx, key).Result()
+			if err != nil {
+				panicWithLog(err)
+			}
+
+			warn := " ************ WARNING ************"
+			if _, _, err := api.PostMessage(
+				param.Event.Channel,
+				slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], val, warn), false)); err != nil {
+				panicWithLog(err)
+			}
+			return
+
+		}
+	}
+
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-
 	client := github.NewClient(tc)
 
 	if os.Getenv("GITHUB_API") != "" && os.Getenv("GITHUB_UPLOADS") != "" {
