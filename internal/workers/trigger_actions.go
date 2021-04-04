@@ -22,7 +22,7 @@ import (
 var commonRegexp = `\w\-\_\.`
 var triggerActionsBaseExp = regexp.MustCompile(`(?P<org>[^\/]+)\/(?P<repo>[` +
 	commonRegexp + `]+)[^\w]+(?P<task>[` + commonRegexp + `]+)`)
-var triggerActionsParamsExp = regexp.MustCompile(`([[:alnum:]]+:[[:alnum:]]+)`)
+var triggerActionsParamsExp = regexp.MustCompile(`([\S]+:[\S]+)`)
 
 var requireParams = []string{"repo", "org", "task"}
 
@@ -145,13 +145,15 @@ func TriggerActions(message *workers.Msg) {
 				panicWithLog(err)
 			}
 
-			warn := " ************ WARNING ************"
-			if _, _, err := api.PostMessage(
-				param.Event.Channel,
-				slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], val, warn), false)); err != nil {
-				panicWithLog(err)
+			if val != result[cfg.LockValueParamsKey] {
+				warn := " ************ WARNING ************"
+				if _, _, err := api.PostMessage(
+					param.Event.Channel,
+					slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], val, warn), false)); err != nil {
+					panicWithLog(err)
+				}
+				return
 			}
-			return
 
 		}
 	}
