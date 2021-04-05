@@ -180,7 +180,7 @@ func TriggerActions(message *workers.Msg) {
 			logrus.Infof("get lock %s from %s", result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
 
 			if !getLock {
-				warn := "************ WARNING ************"
+				warn := "*========== WARNING ==========*"
 				if _, _, err := api.PostMessage(
 					param.Event.Channel,
 					slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], result[cfg.LockValueParamsKey], warn), false)); err != nil {
