@@ -71,7 +71,57 @@ func canLock(ctx context.Context, key, value, ttl string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return redisClient.SetNX(ctx, key, value, t).Result()
+	lock, err := redisClient.SetNX(ctx, key, value, t).Result()
+	if err != nil {
+		return false, err
+	}
+
+	if !lock {
+		v, err := redisClient.Get(ctx, key).Result()
+		if err != nil {
+			return false, err
+		}
+
+		return v == value, nil
+	}
+	return true, nil
+
+}
+
+func unlock(ctx context.Context, key string, result map[string]string, cfg *config, param *TriggerActionsParams, api *slack.Client) error {
+	val, err := redisClient.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			if _, _, err := api.PostMessage(
+				param.Event.Channel,
+				slack.MsgOptionText(fmt.Sprintf("%s/%s hasn't any lock %s", result["org"], result["repo"], result[cfg.LockKeyParamsKey]), false)); err != nil {
+				return err
+			}
+			return nil
+		}
+		return err
+	}
+
+	if val == result[cfg.LockValueParamsKey] {
+		_, err := redisClient.Del(ctx, key).Result()
+		if err != nil {
+			return err
+		}
+		if _, _, err := api.PostMessage(
+			param.Event.Channel,
+			slack.MsgOptionText(fmt.Sprintf("%s/%s release lock from %s", result["org"], result["repo"], val), false)); err != nil {
+			return err
+		}
+	} else {
+		if _, _, err := api.PostMessage(
+			param.Event.Channel,
+			slack.MsgOptionText(fmt.Sprintf("%s/%s don't release lock, because lock owner is  %s", result["org"], result["repo"], val), false)); err != nil {
+			return err
+		}
+
+	}
+	return nil
+
 }
 func TriggerActions(message *workers.Msg) {
 	param := new(TriggerActionsParams)
@@ -102,8 +152,8 @@ func TriggerActions(message *workers.Msg) {
 
 		}
 	}
-	cfg := config{}
-	if err := env.Parse(&cfg); err != nil {
+	cfg := &config{}
+	if err := env.Parse(cfg); err != nil {
 		panicWithLog(err)
 	}
 
@@ -117,36 +167,8 @@ func TriggerActions(message *workers.Msg) {
 		}, "-")
 
 		if result["task"] == cfg.UnlockTaskName {
-			val, err := redisClient.Get(ctx, key).Result()
-			if err != nil {
-				if err == redis.Nil {
-					if _, _, err := api.PostMessage(
-						param.Event.Channel,
-						slack.MsgOptionText(fmt.Sprintf("%s/%s hasn't any lock %s", result["org"], result["repo"], result[cfg.LockKeyParamsKey]), false)); err != nil {
-						panicWithLog(err)
-					}
-					return
-				}
+			if err := unlock(ctx, key, result, cfg, param, api); err != nil {
 				panicWithLog(err)
-			}
-
-			if val == result[cfg.LockValueParamsKey] {
-				_, err := redisClient.Del(ctx, key).Result()
-				if err != nil {
-					panicWithLog(err)
-				}
-				if _, _, err := api.PostMessage(
-					param.Event.Channel,
-					slack.MsgOptionText(fmt.Sprintf("%s/%s release lock from %s", result["org"], result["repo"], val), false)); err != nil {
-					panicWithLog(err)
-				}
-			} else {
-				if _, _, err := api.PostMessage(
-					param.Event.Channel,
-					slack.MsgOptionText(fmt.Sprintf("%s/%s don't release lock, because lock owner is  %s", result["org"], result["repo"], val), false)); err != nil {
-					panicWithLog(err)
-				}
-
 			}
 			return
 		}
@@ -159,21 +181,13 @@ func TriggerActions(message *workers.Msg) {
 			logrus.Infof("get lock %s from %s", result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
 
 			if !getLock {
-				val, err := redisClient.Get(ctx, key).Result()
-				if err != nil {
+				warn := "************ WARNING ************"
+				if _, _, err := api.PostMessage(
+					param.Event.Channel,
+					slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], result[cfg.LockValueParamsKey], warn), false)); err != nil {
 					panicWithLog(err)
 				}
-
-				if val != result[cfg.LockValueParamsKey] {
-					warn := " ************ WARNING ************"
-					if _, _, err := api.PostMessage(
-						param.Event.Channel,
-						slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], val, warn), false)); err != nil {
-						panicWithLog(err)
-					}
-					return
-				}
-
+				return
 			}
 		}
 	}

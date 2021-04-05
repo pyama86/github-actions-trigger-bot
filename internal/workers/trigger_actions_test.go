@@ -85,7 +85,18 @@ func Test_canLock(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("canLock() = %v, want %v", got, tt.want)
 			}
+
 			got, err = canLock(ctx, tt.args.key, tt.args.value, tt.args.ttl)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("canLock() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !got {
+				t.Errorf("canLock() = %v, want %v", got, true)
+			}
+
+			got, err = canLock(ctx, tt.args.key, "other user", tt.args.ttl)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("canLock() error = %v, wantErr %v", err, tt.wantErr)
 				return
