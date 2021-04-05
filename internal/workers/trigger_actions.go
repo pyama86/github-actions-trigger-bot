@@ -65,27 +65,33 @@ func parseTriggerMessage(text string) map[string]string {
 	return result
 }
 
-func canLock(ctx context.Context, key, value, ttl string) (bool, error) {
+func canLock(ctx context.Context, key, value, ttl string) (bool, string, error) {
 
 	t, err := time.ParseDuration(ttl)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	lock, err := redisClient.SetNX(ctx, key, value, t).Result()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
+
+	setTTL, err := redisClient.TTL(ctx, key).Result()
+	if err != nil {
+		return false, "", err
+	}
+
+	expireAt := time.Now().Add(setTTL).Format("2006/01/02 15:04:05")
 
 	if !lock {
 		v, err := redisClient.Get(ctx, key).Result()
 		if err != nil {
-			return false, err
+			return false, "", err
 		}
 
-		return v == value, nil
+		return v == value, expireAt, nil
 	}
-	return true, nil
-
+	return true, expireAt, nil
 }
 
 func unlock(ctx context.Context, key string, result map[string]string, cfg *config, param *TriggerActionsParams, api *slack.Client) error {
@@ -173,7 +179,7 @@ func TriggerActions(message *workers.Msg) {
 		}
 
 		if result[cfg.LockTTLParamsKey] != "" {
-			getLock, err := canLock(ctx, key, result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
+			getLock, expireAt, err := canLock(ctx, key, result[cfg.LockValueParamsKey], result[cfg.LockTTLParamsKey])
 			if err != nil {
 				panicWithLog(err)
 			}
@@ -183,7 +189,7 @@ func TriggerActions(message *workers.Msg) {
 				warn := "*========== WARNING ==========*"
 				if _, _, err := api.PostMessage(
 					param.Event.Channel,
-					slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s\n%s", warn, result["org"], result["repo"], result[cfg.LockValueParamsKey], warn), false)); err != nil {
+					slack.MsgOptionText(fmt.Sprintf("%s\n%s/%s is locking from %s until %s\n%s", warn, result["org"], result["repo"], result[cfg.LockValueParamsKey], expireAt, warn), false)); err != nil {
 					panicWithLog(err)
 				}
 				return

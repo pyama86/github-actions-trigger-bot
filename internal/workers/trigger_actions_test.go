@@ -77,7 +77,7 @@ func Test_canLock(t *testing.T) {
 	for _, tt := range tests {
 		ctx := context.Background()
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := canLock(ctx, tt.args.key, tt.args.value, tt.args.ttl)
+			got, _, err := canLock(ctx, tt.args.key, tt.args.value, tt.args.ttl)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("canLock() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -86,7 +86,7 @@ func Test_canLock(t *testing.T) {
 				t.Errorf("canLock() = %v, want %v", got, tt.want)
 			}
 
-			got, err = canLock(ctx, tt.args.key, tt.args.value, tt.args.ttl)
+			got, _, err = canLock(ctx, tt.args.key, tt.args.value, tt.args.ttl)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("canLock() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -96,7 +96,7 @@ func Test_canLock(t *testing.T) {
 				t.Errorf("canLock() = %v, want %v", got, true)
 			}
 
-			got, err = canLock(ctx, tt.args.key, "other user", tt.args.ttl)
+			got, _, err = canLock(ctx, tt.args.key, "other user", tt.args.ttl)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("canLock() error = %v, wantErr %v", err, tt.wantErr)
 				return
