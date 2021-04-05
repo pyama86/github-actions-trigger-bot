@@ -118,7 +118,6 @@ func unlock(ctx context.Context, key string, result map[string]string, cfg *conf
 			slack.MsgOptionText(fmt.Sprintf("%s/%s don't release lock, because lock owner is  %s", result["org"], result["repo"], val), false)); err != nil {
 			return err
 		}
-
 	}
 	return nil
 
