@@ -91,7 +91,7 @@ func canLock(ctx context.Context, key, value, ttl string) (bool, string, string,
 
 		return v == value, v, expireAt, nil
 	}
-	return true, expireAt, value, nil
+	return true, value, expireAt, nil
 }
 
 func unlock(ctx context.Context, key string, result map[string]string, cfg *config, param *TriggerActionsParams, api *slack.Client) error {
