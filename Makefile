@@ -35,9 +35,7 @@ releasedeps: git-semv
 .PHONY: git-semv
 git-semv:
 ifeq ($(shell uname),Linux)
-	wget https://github.com/linyows/git-semv/releases/download/v1.2.0/git-semv_linux_x86_64.tar.gz
-	tar zxvf git-semv_linux_x86_64.tar.gz
-	sudo mv git-semv /usr/bin/
+	which git-semv || (wget https://github.com/linyows/git-semv/releases/download/v1.2.0/git-semv_linux_x86_64.tar.gz && tar zxvf git-semv_linux_x86_64.tar.gz && sudo mv git-semv /usr/bin/)
 else
 	which git-semv > /dev/null || brew tap linyows/git-semv
 	which git-semv > /dev/null || brew install git-semv

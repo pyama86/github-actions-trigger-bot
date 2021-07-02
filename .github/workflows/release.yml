@@ -13,6 +13,8 @@ jobs:
         fetch-depth: '0'
         token: ${{secrets.GITHUB_TOKEN}}
     - run: sudo apt update -qqy && sudo apt install -qqy wget
+    - run: make releasedeps
+    - run: git-semv now
     - run: make build_image
     - name: Run Vulnerability/Security Scanner
       id: run-scanner
