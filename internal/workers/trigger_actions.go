@@ -247,10 +247,10 @@ L:
 
 		if wfr != nil && len(wfr.WorkflowRuns) > 0 {
 			for _, w := range wfr.WorkflowRuns {
-				logrus.Infof("task: %s, created_at: %s", *w.Name, w.CreatedAt.Local())
-				if *w.Name == result["task"] && (startTime.Local().Before(w.CreatedAt.Local()) || startTime.Local().Equal(w.CreatedAt.Local())) {
+				logrus.Infof("task: %s, start_at: %s, created_at: %s", *w.Name, startTime.Local(), w.CreatedAt.Local())
+				if startTime.Local().Before(w.CreatedAt.Local()) || startTime.Local().Equal(w.CreatedAt.Local()) {
 					resultMessage = fmt.Sprintf("%s/%s %s is starting %s",
-						result["org"], result["repo"], result["task"], *w.HTMLURL)
+						result["org"], result["repo"], *w.Name, *w.HTMLURL)
 					break L
 				}
 			}
