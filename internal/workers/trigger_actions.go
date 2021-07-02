@@ -11,7 +11,7 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/go-redis/redis/v8"
-	"github.com/google/go-github/v33/github"
+	"github.com/google/go-github/v36/github"
 	"github.com/jrallison/go-workers"
 	"github.com/sirupsen/logrus"
 	"github.com/slack-go/slack"
@@ -230,7 +230,25 @@ func TriggerActions(message *workers.Msg) {
 		panicWithLog(err)
 	}
 
-	if _, _, err := api.PostMessage(param.Event.Channel, slack.MsgOptionText(fmt.Sprintf("%s/%s %s is starting", result["org"], result["repo"], result["task"]), false)); err != nil {
+	wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
+		Event:       "repository_dispatch",
+		Branch:      result["branch"],
+		ListOptions: github.ListOptions{Page: 1, PerPage: 10},
+	})
+
+	var resultMessage = ""
+	if wfr == nil || len(wfr.WorkflowRuns) == 0 {
+		resultMessage = fmt.Sprintf("%s/%s %s is starting", result["org"], result["repo"], result["task"])
+	} else {
+		for _, w := range wfr.WorkflowRuns {
+			if *w.Name == result["task"] {
+				resultMessage = fmt.Sprintf("%s/%s %s is starting %s", result["org"], result["repo"], result["task"], *w.HTMLURL)
+				break
+			}
+		}
+	}
+
+	if _, _, err := api.PostMessage(param.Event.Channel, slack.MsgOptionText(resultMessage, false)); err != nil {
 		panicWithLog(err)
 	}
 }
