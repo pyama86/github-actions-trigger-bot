@@ -9,6 +9,9 @@ jobs:
     if: "contains(github.ref, 'master')"
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: '0'
+        token: ${{secrets.GITHUB_TOKEN}}
     - run: sudo apt update -qqy && sudo apt install -qqy wget
     - run: make build_image
     - name: Run Vulnerability/Security Scanner
