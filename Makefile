@@ -6,6 +6,7 @@ build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o github-actions-trigger main.go
 
 build_image: build
+	export DOCKER_CONTENT_TRUST=1 
 	docker build -t pyama/github-actions-trigger .
 
 push_image:
