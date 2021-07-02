@@ -9,7 +9,7 @@ jobs:
     if: "contains(github.ref, 'master')"
     steps:
     - uses: actions/checkout@v2
-    - run: sudo apt update -qqy && sudo apt install -qqy git
+    - run: sudo apt update -qqy && sudo apt install -qqy wget
     - run: make build_image
     - name: Run Vulnerability/Security Scanner
       id: run-scanner

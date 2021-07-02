@@ -1,8 +1,8 @@
-VERSION := $(shell git tag | grep ^v | sort -V | tail -n 1 |sed -e 's/v//g')
+VERSION = $(git-semv now)
 run:
 	go run .
 
-build:
+build: releasedeps
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o github-actions-trigger main.go
 
 build_image: build
@@ -34,5 +34,11 @@ releasedeps: git-semv
 
 .PHONY: git-semv
 git-semv:
+ifeq ($(shell uname),Linux)
+	wget https://github.com/linyows/git-semv/releases/download/v1.2.0/git-semv_linux_x86_64.tar.gz
+	tar zxvf git-semv_linux_x86_64.tar.gz
+	sudo mv git-semv /usr/bin/
+else
 	which git-semv > /dev/null || brew tap linyows/git-semv
 	which git-semv > /dev/null || brew install git-semv
+endif
