@@ -1,4 +1,4 @@
-VERSION = $(git-semv now)
+VERSION := $(shell git-semv now | sed -e 's/v//g')
 run:
 	go run .
 
