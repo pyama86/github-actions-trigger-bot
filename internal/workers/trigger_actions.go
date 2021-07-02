@@ -230,6 +230,7 @@ func TriggerActions(message *workers.Msg) {
 		panicWithLog(err)
 	}
 
+	time.Sleep(3 * time.Second)
 	wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
 		Event:       "repository_dispatch",
 		Branch:      result["branch"],
