@@ -1,4 +1,4 @@
-VERSION := $(shell git tag | grep ^v | sort -V | tail -n 1)
+VERSION := $(shell git tag | grep ^v | sort -V | tail -n 1 |sed -e 's/v//g')
 run:
 	go run .
 
