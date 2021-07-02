@@ -232,7 +232,7 @@ func TriggerActions(message *workers.Msg) {
 	}
 
 	var resultMessage = ""
-	try := 5
+	try := 10
 L:
 	for range make([]int, try) {
 		wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
