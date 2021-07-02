@@ -224,29 +224,41 @@ func TriggerActions(message *workers.Msg) {
 	payload := json.RawMessage(bytes)
 	input := github.DispatchRequestOptions{EventType: result["task"], ClientPayload: &payload}
 
+	startTime := time.Now()
 	logrus.Infof("github actions payload %s", string(payload))
 	_, _, err = client.Repositories.Dispatch(ctx, result["org"], result["repo"], input)
 	if err != nil {
 		panicWithLog(err)
 	}
 
-	time.Sleep(3 * time.Second)
-	wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
-		Event:       "repository_dispatch",
-		Branch:      result["branch"],
-		ListOptions: github.ListOptions{Page: 1, PerPage: 10},
-	})
-
 	var resultMessage = ""
-	if wfr == nil || len(wfr.WorkflowRuns) == 0 {
-		resultMessage = fmt.Sprintf("%s/%s %s is starting", result["org"], result["repo"], result["task"])
-	} else {
-		for _, w := range wfr.WorkflowRuns {
-			if *w.Name == result["task"] {
-				resultMessage = fmt.Sprintf("%s/%s %s is starting %s", result["org"], result["repo"], result["task"], *w.HTMLURL)
-				break
+	try := 5
+L:
+	for range make([]int, try) {
+		wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
+			Event:       "repository_dispatch",
+			Branch:      result["branch"],
+			ListOptions: github.ListOptions{Page: 1, PerPage: 10},
+		})
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+
+		if wfr != nil && len(wfr.WorkflowRuns) > 0 {
+			for _, w := range wfr.WorkflowRuns {
+				if *w.Name == result["task"] && startTime.Local().After(w.CreatedAt.Local()) {
+					resultMessage = fmt.Sprintf("%s/%s %s is starting %s",
+						result["org"], result["repo"], result["task"], *w.HTMLURL)
+					break L
+				}
 			}
 		}
+		time.Sleep(1 * time.Second)
+	}
+
+	if resultMessage == "" {
+		resultMessage = fmt.Sprintf("%s/%s %s is starting", result["org"], result["repo"], result["task"])
 	}
 
 	if _, _, err := api.PostMessage(param.Event.Channel, slack.MsgOptionText(resultMessage, false)); err != nil {
