@@ -75,11 +75,18 @@ func main() {
 				event.Text = strings.Replace(event.Text, "\u00a0", " ", -1)
 				message := strings.Split(event.Text, " ")
 				command := message[1]
+				api := slack.New(os.Getenv("SLACK_BOT_TOKEN"))
 
 				switch {
 				case command == "ping":
-					api := slack.New(os.Getenv("SLACK_BOT_TOKEN"))
 					if _, _, err := api.PostMessage(event.Channel, slack.MsgOptionText("pong or sing a song?", false)); err != nil {
+						logrus.Error(err)
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+
+					w.WriteHeader(http.StatusOK)
+				case command == "help":
+					if _, _, err := api.PostMessage(event.Channel, slack.MsgOptionText("<org/repo> <task> <key:value>...", false)); err != nil {
 						logrus.Error(err)
 						w.WriteHeader(http.StatusInternalServerError)
 					}
