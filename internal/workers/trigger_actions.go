@@ -247,7 +247,7 @@ L:
 
 		if wfr != nil && len(wfr.WorkflowRuns) > 0 {
 			for _, w := range wfr.WorkflowRuns {
-				if *w.Name == result["task"] && startTime.Local().After(w.CreatedAt.Local()) {
+				if *w.Name == result["task"] && startTime.Local().Before(w.CreatedAt.Local()) {
 					resultMessage = fmt.Sprintf("%s/%s %s is starting %s",
 						result["org"], result["repo"], result["task"], *w.HTMLURL)
 					break L
