@@ -233,25 +233,32 @@ func TriggerActions(message *workers.Msg) {
 
 	var resultMessage = ""
 	try := 10
+	page := 1
+	perPage := 100
+	totalCount := 1
 L:
 	for range make([]int, try) {
-		wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
-			Event:       "repository_dispatch",
-			Branch:      result["branch"],
-			ListOptions: github.ListOptions{Page: 1, PerPage: 10},
-		})
-		if err != nil {
-			logrus.Error(err)
-			continue
-		}
+		for (page-1)*perPage < totalCount {
+			wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
+				Event:       "repository_dispatch",
+				Branch:      result["branch"],
+				ListOptions: github.ListOptions{Page: page, PerPage: perPage},
+			})
+			if err != nil {
+				logrus.Error(err)
+				break L
+			}
+			totalCount = *wfr.TotalCount
+			page++
 
-		if wfr != nil && len(wfr.WorkflowRuns) > 0 {
-			for _, w := range wfr.WorkflowRuns {
-				logrus.Infof("task: %s, start_at: %s, created_at: %s", *w.Name, startTime.Local(), w.CreatedAt.Local())
-				if startTime.Local().Before(w.CreatedAt.Local()) || startTime.Local().Equal(w.CreatedAt.Local()) {
-					resultMessage = fmt.Sprintf("%s/%s %s is starting %s",
-						result["org"], result["repo"], *w.Name, *w.HTMLURL)
-					break L
+			if wfr != nil && len(wfr.WorkflowRuns) > 0 {
+				for _, w := range wfr.WorkflowRuns {
+					logrus.Infof("task: %s, start_at: %s, created_at: %s", *w.Name, startTime.Local(), w.CreatedAt.Local())
+					if startTime.Local().Before(w.CreatedAt.Local()) || startTime.Local().Equal(w.CreatedAt.Local()) {
+						resultMessage = fmt.Sprintf("%s/%s %s is starting %s",
+							result["org"], result["repo"], *w.Name, *w.HTMLURL)
+						break L
+					}
 				}
 			}
 		}
