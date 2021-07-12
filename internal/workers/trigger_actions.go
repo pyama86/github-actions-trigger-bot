@@ -232,7 +232,7 @@ func TriggerActions(message *workers.Msg) {
 	}
 
 	var resultMessage = ""
-	try := 10
+	try := 30
 	page := 1
 	perPage := 100
 	totalCount := 1
