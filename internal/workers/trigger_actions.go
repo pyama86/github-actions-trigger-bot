@@ -241,7 +241,6 @@ L:
 		for (page-1)*perPage < totalCount {
 			wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
 				Event:       "repository_dispatch",
-				Branch:      result["branch"],
 				ListOptions: github.ListOptions{Page: page, PerPage: perPage},
 			})
 			if err != nil {
