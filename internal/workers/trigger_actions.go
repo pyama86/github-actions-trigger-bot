@@ -233,11 +233,11 @@ func TriggerActions(message *workers.Msg) {
 
 	var resultMessage = ""
 	try := 30
-	page := 1
 	perPage := 100
 	totalCount := 1
 L:
 	for range make([]int, try) {
+		page := 1
 		for (page-1)*perPage < totalCount {
 			wfr, _, err := client.Actions.ListRepositoryWorkflowRuns(ctx, result["org"], result["repo"], &github.ListWorkflowRunsOptions{
 				Event:       "repository_dispatch",
