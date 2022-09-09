@@ -1,5 +1,6 @@
 FROM alpine:3
 RUN apk --update add --no-cache ca-certificates tzdata && \
+    apk upgrade --no-cache && \
     cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     rm -rf /var/cache/apk/*
 RUN adduser -S bot \
