@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/caarlos0/env/v6 v6.5.0
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customerio/gospec v0.0.0-20130710230057-a5cc0e48aa39 // indirect
 	github.com/garyburd/redigo v1.6.2 // indirect
 	github.com/go-redis/redis/v8 v8.8.0
