@@ -10,7 +10,7 @@ require (
 	github.com/garyburd/redigo v1.6.2 // indirect
 	github.com/go-redis/redis/v8 v8.8.0
 	github.com/google/go-github/v36 v36.0.0
-	github.com/joho/godotenv v1.3.0
+	github.com/joho/godotenv v1.4.0
 	github.com/jrallison/go-workers v0.0.0-20180112190529-dbf81d0b75bb
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible
