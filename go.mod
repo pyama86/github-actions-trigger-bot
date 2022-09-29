@@ -18,8 +18,7 @@ require (
 	github.com/orfjackal/nanospec.go v0.0.0-20120727230329-de4694c1d701 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/slack-go/slack v0.11.3
-	github.com/stretchr/testify v1.7.0 // indirect
-	github.com/thoas/go-funk v0.7.0
+	github.com/thoas/go-funk v0.9.2
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3
 )
