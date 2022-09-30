@@ -1,8 +1,7 @@
 name: Release Docker Image
 on:
   push:
-    branches:
-      - master
+    tags:
 jobs:
   release:
     runs-on: ubuntu-latest
