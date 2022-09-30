@@ -2,6 +2,22 @@ VERSION := $(shell git-semv now | sed -e 's/v//g')
 run:
 	go run .
 
+
+## release_major: release nke (major)
+release_major: releasedeps
+	git semv major --bump
+
+.PHONY: release_minor
+## release_minor: release nke (minor)
+release_minor: releasedeps
+	git semv minor --bump
+
+.PHONY: release_patch
+## release_patch: release nke (patch)
+release_patch: releasedeps
+	git semv patch --bump
+
+
 build: releasedeps
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o github-actions-trigger main.go
 
