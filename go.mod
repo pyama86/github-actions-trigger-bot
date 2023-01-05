@@ -11,7 +11,7 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/sirupsen/logrus v1.9.0
 	github.com/slack-go/slack v0.11.4
-	github.com/thoas/go-funk v0.9.2
+	github.com/thoas/go-funk v0.9.3
 	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3
 )
 
