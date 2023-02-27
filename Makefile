@@ -1,4 +1,4 @@
-VERSION := $(shell git-semv now | sed -e 's/v//g')
+VERSION := $(shell git-semv now | sed -e 's/v//g')-$(shell git show --format='%h' --no-patch)
 run:
 	go run .
 
