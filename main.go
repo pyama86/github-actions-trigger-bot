@@ -76,7 +76,10 @@ func main() {
 			switch event := innerEvent.Data.(type) {
 			case *slackevents.AppMentionEvent:
 				logrus.Info(event.Text)
+				// for slack remind
 				event.Text = strings.Replace(event.Text, "Reminder: ", "", -1)
+				event.Text = strings.TrimSuffix(event.Text, ".")
+
 				event.Text = strings.Replace(event.Text, "\u00a0", " ", -1)
 				message := strings.Split(event.Text, " ")
 				command := message[1]
