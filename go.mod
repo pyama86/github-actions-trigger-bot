@@ -10,7 +10,7 @@ require (
 	github.com/jrallison/go-workers v0.0.0-20180112190529-dbf81d0b75bb
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/sirupsen/logrus v1.9.3
-	github.com/slack-go/slack v0.12.3
+	github.com/slack-go/slack v0.12.4
 	github.com/thoas/go-funk v0.9.3
 	golang.org/x/oauth2 v0.17.0
 )
