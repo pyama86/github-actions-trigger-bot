@@ -40,6 +40,16 @@ func Test_parseTriggerMessage(t *testing.T) {
 				"hoge": "fuga",
 			},
 		},
+		{
+			name: "ok",
+			text: "org/repo task email:<mailto:test@example.com>",
+			want: map[string]string{
+				"org":   "org",
+				"repo":  "repo",
+				"task":  "task",
+				"email": "<mailto:test@example.com>",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
