@@ -57,7 +57,7 @@ func parseTriggerMessage(text string) map[string]string {
 	}
 	for _, v := range match {
 		if strings.Index(v[0], ":") > 0 {
-			kv := strings.Split(v[0], ":")
+			kv := strings.SplitN(v[0], ":", 2)
 			result[kv[0]] = kv[1]
 		}
 	}
