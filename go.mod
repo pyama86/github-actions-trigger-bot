@@ -1,6 +1,6 @@
 module github.com/pyama86/github-actions-trigger-bot
 
-go 1.18
+go 1.23.2
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
