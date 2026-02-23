@@ -1,6 +1,6 @@
 module github.com/pyama86/github-actions-trigger-bot
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -10,7 +10,7 @@ require (
 	github.com/jrallison/go-workers v0.0.0-20180112190529-dbf81d0b75bb
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/sirupsen/logrus v1.9.4
-	github.com/slack-go/slack v0.17.3
+	github.com/slack-go/slack v0.18.0
 	github.com/thoas/go-funk v0.9.3
 	golang.org/x/oauth2 v0.35.0
 )
