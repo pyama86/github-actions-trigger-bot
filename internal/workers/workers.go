@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	goworkers "github.com/jrallison/go-workers"
 	"github.com/sirupsen/logrus"
 )

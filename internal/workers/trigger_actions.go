@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caarlos0/env/v6"
-	"github.com/go-redis/redis/v8"
-	"github.com/google/go-github/v36/github"
+	"github.com/caarlos0/env/v11"
+	"github.com/redis/go-redis/v9"
+	"github.com/google/go-github/v93/github"
 	"github.com/jrallison/go-workers"
 	"github.com/sirupsen/logrus"
 	"github.com/slack-go/slack"
@@ -201,10 +201,16 @@ func TriggerActions(message *workers.Msg) {
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
+	client, err := github.NewClient(github.WithHTTPClient(tc))
+	if err != nil {
+		panicWithLog(err)
+	}
 
 	if os.Getenv("GITHUB_API") != "" && os.Getenv("GITHUB_UPLOADS") != "" {
-		c, err := github.NewEnterpriseClient(os.Getenv("GITHUB_API"), os.Getenv("GITHUB_UPLOADS"), tc)
+		c, err := github.NewClient(
+			github.WithHTTPClient(tc),
+			github.WithEnterpriseURLs(os.Getenv("GITHUB_API"), os.Getenv("GITHUB_UPLOADS")),
+		)
 		if err != nil {
 			panicWithLog(err)
 		}
