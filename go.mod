@@ -12,7 +12,7 @@ require (
 	github.com/sirupsen/logrus v1.10.2
 	github.com/slack-go/slack v0.35.0
 	github.com/thoas/go-funk v0.9.3
-	golang.org/x/oauth2 v0.37.0
+	golang.org/x/oauth2 v0.38.0
 )
 
 require (
