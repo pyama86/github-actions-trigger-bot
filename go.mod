@@ -10,7 +10,7 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/redis/go-redis/v9 v9.23.0
 	github.com/sirupsen/logrus v1.10.2
-	github.com/slack-go/slack v0.35.0
+	github.com/slack-go/slack v0.36.0
 	github.com/thoas/go-funk v0.9.3
 	golang.org/x/oauth2 v0.38.0
 )
